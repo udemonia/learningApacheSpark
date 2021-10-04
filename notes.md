@@ -67,6 +67,17 @@ val fromDatDf = spark.read
 .csv("/FileStore/tables/retailer/data/customer.dat")
 ```
 
+We can also bring in many options with Map
+
+```Scala
+val itemDf = spark.read
+  .format("csv")
+  .options(Map("header" -> "true"
+             , "delimiter" -> "|"
+             , "inferSchema" -> "true"))
+  .load("/FileStore/tables/retailer/data/item.dat")
+```
+
 ### Selecting Columns
 
 `val customerBirthdays = customerDataFrameWithHeaders.select("c_customer_id", "c_first_name", "c_last_name", "c_birth_year", "c_birth_month", "c_birth_day")`
@@ -301,3 +312,113 @@ The join expression takes three arguments - the right table (we call the method 
 the join will evaluate each row against the expression, returning those which evaluate to true
 
 `val customersWithAddressesDf = customerDf.join(customerAddress, joinExpression, "inner")`
+
+optionally, we could call **.select with the join and pass the columns to return from either dataframe**
+
+### Aggregation
+
+df.count to count the records in the dataframe
+
+bring in the count function
+
+`import org.apache.spark.sql.functions.count`
+
+#### count
+
+we have to call .select on the dataframe, in this example, we're passing \* as all, count all
+
+`customerDf.select(count("*")).show`
+
+the two examples above are identical
+
+count how many c_first_name have values
+
+`customerDf.select(count("c_first_name")).show`
+
+would be roughly the same as filter where a value isNotNull
+
+`customerDf.filter($"c_first_name".isNotNull).count`
+
+#### Count Distinct
+
+lets bring in count distinct
+
+`import org.apache.spark.sql.functions.countDistinct`
+
+then we can call .select(countDistinct)
+
+`customerDf.select(countDistinct($"c_first_name")).show`
+
+```text
++----------------------------+
+|count(DISTINCT c_first_name)|
++----------------------------+
+|                        4131|
++----------------------------+
+```
+
+#### min value
+
+Find the product with the smallest price
+
+lets bring in the min function
+
+`import org.apache.spark.sql.functions.min`
+
+similar to the count and countDistinct methods, we call .select(min($"column"))
+
+`itemDf.select(min($"i_wholesale_cost")).show`
+
+we can add on a rename to get a better presentation - this returns a dataframe, we'll store it
+
+`val minDf = itemDf.select(min($"i_wholesale_cost")).withColumnRenamed("min(i_wholesale_cost)", "minCost")`
+
+After pulling back the min cost in the dataframe, we can join the dateframe with the minCost value of the new dataframe, returning just the results w/ that cost
+
+```Scala
+val cheapestItemDf = itemDf
+  .join(minDf, itemDf.col("i_wholesale_cost") === minDf.col("minCost"), "inner")
+```
+
+#### Get the Max Value
+
+bring it in
+
+`import org.apache.spark.sql.functions.max`
+
+call the .select(max($"column_name"))
+
+I've added rename as it tends to give the column a funky name
+
+`val maxItem = itemDf.select(max($"i_wholesale_cost")).withColumnRenamed("max(i_wholesale_cost)", "maxValue")`
+
+now, we can join the original w/ an inner join to display all the records with that value
+
+```scala
+val mostExpensiveItem = itemDf
+  .join(maxItem, itemDf.col("i_wholesale_cost") === maxItem.col("maxValue"))
+```
+
+#### the Sum Function
+
+bring the sum function in
+
+`import org.apache.spark.sql.functions.sum`
+
+call it with .select(sum($"column name"))
+
+Lets add up the entire current price for all items
+
+`itemDf.select(sum($"i_current_price")).show`
+
+#### Sum Distinct
+
+import sum distinct, **we can also pass an object like js to bring in more than one sql.functions at a time**
+
+`import org.apache.spark.sql.functions.{sum, sumDistinct }`
+
+then we can call .select(sumDistinct($"Column name"))
+
+In this example, we're counting how many managers are in the dataset
+
+`itemDf.select(sumDistinct($"i_manager_id")).show`
