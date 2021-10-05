@@ -422,3 +422,82 @@ then we can call .select(sumDistinct($"Column name"))
 In this example, we're counting how many managers are in the dataset
 
 `itemDf.select(sumDistinct($"i_manager_id")).show`
+
+#### Average and Mean
+
+bring in average and mean
+
+`import org.apache.spark.sql.functions.{avg, mean}`
+
+same syntax as above - notice the .as("New Column Name")
+
+`itemDf.select(avg($"i_current_price").as("Average Price"), mean($"i_current_price").as("Mean Price")).show`
+
+```text
++-----------------+-----------------+
+|    Average Price|       Mean Price|
++-----------------+-----------------+
+|9.523071010860495|9.523071010860495|
++-----------------+-----------------+
+```
+
+we could also get average by dividing the sum by the count
+
+`itemDf.select(sum("i_current_price") / count("i_current_price")).show`
+
+### Group By w/ Aggregates
+
+Group by is an amazing way to format data
+
+For instance, what if we wanted to know how many managers where in each of the divisions?
+
+we could group by division and count managers
+
+```spark
+storeDf.groupBy("s_division_id").agg(
+  countDistinct("s_manager").as("How Many Managers")
+).show
+```
+
+```txt
++-------------+-----------------+
+|s_division_id|How Many Managers|
++-------------+-----------------+
+|            1|                7|
++-------------+-----------------+
+```
+
+### User defined functions
+
+In our customer dataframe we don't have a string for birthday - if we wanted to get at birthday, we'd need to query 3 columns
+
+To get around this, we can create a user defined function
+
+```scala
+def getCustomerBirthday(year: Int, month: Int, day: Int) : String = {
+  return java.time.LocalDate.of(year,month,day).toString
+}
+```
+
+we can see here that scala in static typed
+
+In order to use the Scala function within the Dataframe, **we have to declare it as a user defined function**
+
+It's best practice to _declare the parameter & return types_ when registering a udf method within databricks/spark session
+
+```Scala
+val getCustomerBirthday_udf = udf(getCustomerBirthday(_: Int, _: Int, _:Int): String)
+```
+
+lets prepare a selection of the customer dataframe to run the UDF against
+
+```Scala
+customerDatDf.select($"c_customer_sk"
+                     , concat($"c_first_name", $"c_last_name") as ("c_name")
+                    , $"c_birth_year"
+                    , $"c_birth_month"
+                    ,$"c_birth_day"
+                    ).show()
+```
+
+## Infra of Spark
