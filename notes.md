@@ -552,4 +552,38 @@ customerDatDf.select(
 +----------+-------------+--------------------+------------+-------------+-----------+
 ```
 
-## Infra of Spark
+### Select Expression
+
+you can call selectExpr and pass it any valid SQL expression
+
+```Scala
+
+```
+
+## SQL on a Dataframe
+
+Note - we need to take stock of the type of workbook we're using, we can use Python, Scala, SQL notebooks
+
+for this first example, we're going to use a sql notebook where as the above examples use Scala
+
+to use Scala within a SQL dataframe, we just need to tell the workbook the code is in Scala
+
+similar to the `%fs ls` syntax to explore the file system with terminal commands, we can use....
+
+```scala
+%scala
+val customerAddress = spark.read.format("csv").options(Map("header" -> "true", "sep" -> "true", "inferSchema" -> "true")).load("/FileStore/tables/retailer/data/customer_address.dat")
+```
+
+in this way, we can read in a Scala dataframe within a SQL workbook
+
+### SQL View
+
+We need to create a SQL view to abstract away the complexity of querying data across clusters
+
+we do this with createTempView()
+
+```Scala
+%scala
+customerAddress.createTempView("vCustomerAddress")
+```
