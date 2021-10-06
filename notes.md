@@ -587,3 +587,32 @@ we do this with createTempView()
 %scala
 customerAddress.createTempView("vCustomerAddress")
 ```
+
+from there, we can use the spark method sql and pass it queries
+
+```scala
+%scala
+spark.sql("select * from vCustomerAddress")
+```
+
+Of note, we're querying the view not the dataframe itself
+
+the above query is roughly the same as `%customerAddressDataframe.select("*")`
+
+We don't have to use the `spark.sql(...)` when we're within a SQL workbook - only when we're within a Python or Scala workbook
+
+`select * from vCustomerAddress`
+
+```text
+ca_address_sk|ca_address_id|ca_street_number|ca_street_name|ca_street_type|ca_suite_number|ca_city|ca_county|ca_state|ca_zip|ca_country|ca_gmt_offset|ca_location_type
+
+1|AAAAAAAABAAAAAAA|18 |Jackson |Parkway |Suite 280 |Fairfield|Maricopa County|AZ|86192 |United States|-7.00|condo
+2|AAAAAAAACAAAAAAA|362 |Washington 6th|RD |Suite 80 |Fairview|Taos County|NM|85709 |United States|-7.00|condo
+3|AAAAAAAADAAAAAAA|585 |Dogwood Washington|Circle |Suite Q |Pleasant Valley|York County|PA|12477 |United States|-5.00|single family
+4|AAAAAAAAEAAAAAAA|111 |Smith |Wy |Suite A |Oak Ridge|Kit Carson County|CO|88371 |United States|-7.00|condo
+5|AAAAAAAAFAAAAAAA|31 |College |Blvd |Suite 180 |Glendale|Barry County|MO|63951 |United States|-6.00|single family
+6|AAAAAAAAGAAAAAAA|59 |Williams Sixth|Parkway |Suite 100 |Lakeview|Chelan County|WA|98579 |United States|-8.00|single family
+7|AAAAAAAAHAAAAAAA||Hill 7th|Road |Suite U |Farmington|||39145 |United States||
+8|AAAAAAAAIAAAAAAA|875 |Lincoln |Ct. |Suite Y |Union|Bledsoe County|TN|38721 |United States|-5.00|apartment
+9|AAAAAAAAJAAAAAAA|819 |1st Laurel|Ave |Suite 70 |New Hope|Perry County|AL|39431 |United States|-6.00|condo
+```
